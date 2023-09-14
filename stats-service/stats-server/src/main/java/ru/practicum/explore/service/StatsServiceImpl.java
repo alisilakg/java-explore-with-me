@@ -58,7 +58,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<ViewStatsDto> getStats(String startEncoded, String endEncoded, List<String> uris) {
+    public List<ViewStatsDto> getStats(String startEncoded, String endEncoded, List<String> uris, String nameApp) {
         String startDecoded = decodeDateTime(startEncoded);
         String endDecoded = decodeDateTime(endEncoded);
 
@@ -85,7 +85,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<ViewStatsDto> getUniqueStats(String startEncoded, String endEncoded, List<String> uris) {
+    public List<ViewStatsDto> getUniqueStats(String startEncoded, String endEncoded, List<String> uris, String nameApp) {
         String startDecoded = decodeDateTime(startEncoded);
         String endDecoded = decodeDateTime(endEncoded);
 

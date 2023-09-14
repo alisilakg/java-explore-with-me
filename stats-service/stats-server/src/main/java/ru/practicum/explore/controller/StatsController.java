@@ -29,13 +29,13 @@ public class StatsController {
     public ResponseEntity<List<ViewStatsDto>> getStats(@RequestParam String start,
                                                        @RequestParam String end,
                                                        @RequestParam(required = false, defaultValue = "") List<String> uris,
-                                                       @RequestParam(defaultValue = "false") Boolean unique) {
-        log.info("Получен GET-запрос к эндпоинту: '/stats' на получение статистики" +
-                " с параметрами start={}, end={}, uris={}, unique={}", start, end, uris, unique);
-        if (unique) {
-            return ResponseEntity.ok(statsService.getUniqueStats(start, end, uris));
+                                                       @RequestParam(defaultValue = "false") Boolean unique,
+                                                       @RequestParam(required = false, defaultValue = "ewm-main-service") String nameApp) {
+        log.info("Получен GET-запрос к эндпоинту: '/stats' из сервиса с названием = {} на получение статистики" +
+                " с параметрами start={}, end={}, uris={}, unique={}", nameApp, start, end, uris, unique); if (unique) {
+            return ResponseEntity.ok(statsService.getUniqueStats(start, end, uris, nameApp));
         } else {
-            return ResponseEntity.ok(statsService.getStats(start, end, uris));
+            return ResponseEntity.ok(statsService.getStats(start, end, uris, nameApp));
         }
     }
 
