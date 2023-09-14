@@ -17,7 +17,6 @@ import java.util.Map;
 
 @Service
 public class StatsClient extends BaseClient {
-    private static final String PATH_HIT = "/hit";
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String SERVER_URL = "http://stats-server:9090";
 
