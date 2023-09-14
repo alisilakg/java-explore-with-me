@@ -12,10 +12,10 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EndpointHit {
-    Long id;
-    Long appId;
-    String uri;
-    String ip;
-    Instant timestamp;
+    private Long id;
+    private Long appId;
+    private String uri;
+    private String ip;
+    private Instant timestamp;
 
 }
