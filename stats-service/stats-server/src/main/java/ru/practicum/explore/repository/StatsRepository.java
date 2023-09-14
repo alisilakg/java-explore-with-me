@@ -1,5 +1,6 @@
 package ru.practicum.explore.repository;
 
+import ru.practicum.explore.model.App;
 import ru.practicum.explore.model.EndpointHit;
 
 import java.time.Instant;
@@ -10,11 +11,17 @@ public interface StatsRepository {
 
     void addEndpointHit(EndpointHit endpointHit);
 
-    Map<Long, Long> getStatsByTime(Instant start, Instant end);
+    Map<String, Long> getStatsByTime(Instant start, Instant end);
 
-    Map<Long, Long> getStatsByAppIds(Instant start, Instant end, List<Long> appIds);
+    Map<String, Long> getUniqueStatsByTime(Instant start, Instant end);
 
-    Map<Long, Long> getUniqueStatsByTime(Instant start, Instant end);
+    Map<String, Long> getUniqueStatsByUris(Instant start, Instant end, List<String> uris);
 
-    Map<Long, Long> getUniqueStatsByAppIds(Instant start, Instant end, List<Long> appIds);
+    App addApp(App app);
+
+    App findAppById(Long id);
+
+    Long findIdByNameApp(String nameApp);
+
+    Map<String, Long> getStatsByUris(Instant start, Instant end, List<String> uris);
 }

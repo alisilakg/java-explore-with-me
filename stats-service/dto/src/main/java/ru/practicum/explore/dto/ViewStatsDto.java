@@ -14,6 +14,6 @@ public class ViewStatsDto implements Comparable<ViewStatsDto> {
 
     @Override
     public int compareTo(ViewStatsDto o) {
-        return (int) (o.getHits() - hits);
+        return (int)(o.getHits() - this.hits);
     }
 }

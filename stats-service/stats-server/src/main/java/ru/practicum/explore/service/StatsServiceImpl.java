@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import ru.practicum.explore.dto.ViewStatsDto;
 import ru.practicum.explore.mapper.EndpointHitMapper;
 import ru.practicum.explore.mapper.StatsMapper;
-import ru.practicum.explore.repository.AppRepository;
 import ru.practicum.explore.repository.StatsRepository;
 import ru.practicum.explore.model.App;
 import ru.practicum.explore.model.EndpointHit;
 import ru.practicum.explore.dto.EndpointHitDto;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.transaction.Transactional;
 import java.net.URLDecoder;
@@ -20,10 +20,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,29 +30,26 @@ public class StatsServiceImpl implements StatsService {
     public static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final StatsRepository statsRepository;
-    private final AppRepository appRepository;
+
 
     @Transactional
     @Override
     public void createHit(EndpointHitDto endpointHitDto) {
         String nameApp = endpointHitDto.getApp();
-        String uri = endpointHitDto.getUri();
-        long appId;
-
-        List<App> apps = appRepository.findByNameAppAndUri(nameApp, uri);
-
-        if (apps.isEmpty()) {
-            App appToAdd = new App();
-            appToAdd.setName(nameApp);
-            appToAdd.setUri(uri);
-            appId = appRepository.addApp(appToAdd).getId();
-        } else {
-            appId = apps.get(0).getId();
+        try {
+            Long id = statsRepository.findIdByNameApp(nameApp);
+            EndpointHit endpointHit = EndpointHitMapper.toEndpointHit(endpointHitDto, id);
+            statsRepository.addEndpointHit(endpointHit);
+            log.debug("Пользователь с IP={} просмотрел uri {} сервиса {}", endpointHit.getIp(), endpointHitDto.getUri(), nameApp);
+        } catch (EmptyResultDataAccessException e) {
+            App appToAdd = App.builder()
+                    .name(nameApp)
+                    .build();
+            App app = statsRepository.addApp(appToAdd);
+            EndpointHit endpointHit = EndpointHitMapper.toEndpointHit(endpointHitDto, app.getId());
+            statsRepository.addEndpointHit(endpointHit);
+            log.debug("Пользователь с IP={} просмотрел uri {} сервиса {}", endpointHit.getIp(), endpointHitDto.getUri(), nameApp);
         }
-
-        EndpointHit endpointHit = EndpointHitMapper.toEndpointHit(endpointHitDto, appId);
-        statsRepository.addEndpointHit(endpointHit);
-        log.debug("Пользователь с IP={} просмотрел uri {} сервиса {}", endpointHit.getIp(), uri, nameApp);
     }
 
     @Override
@@ -64,24 +59,19 @@ public class StatsServiceImpl implements StatsService {
 
         Instant start = parseDateTime(startDecoded);
         Instant end = parseDateTime(endDecoded);
+        App app = findAppByName(nameApp);
 
+        Map<String, Long> stats;
         if (uris.isEmpty()) {
-            Map<Long, Long> stats = statsRepository.getStatsByTime(start, end);
-            List<Long> appIds = new ArrayList<>(stats.keySet());
-            List<App> apps = new ArrayList<>(appRepository.findAppsByIds(appIds));
-            log.debug("Запрос статистики для периода с {} по {}.",
-                    start, end);
-            return StatsMapper.toViewStats(stats, apps);
+            stats = statsRepository.getStatsByTime(start, end);
+            log.debug("Запрос статистики сервиса с id={} для периода с {} по {}.",
+                    app.getId(), start, end);
         } else {
-            List<App> apps = new ArrayList<>(appRepository.findAppsByUris(uris));
-            List<Long> appsIds = apps.stream()
-                    .map(App::getId)
-                    .collect(Collectors.toList());
-            Map<Long, Long> stats = statsRepository.getStatsByAppIds(start, end, appsIds);
-            log.debug("Запрос статистики для периода с {} по {}. Список uri {}.",
-                    start, end, uris);
-            return StatsMapper.toViewStats(stats, apps);
+            stats = statsRepository.getStatsByUris(start, end, uris);
+            log.debug("Запрос статистики сервиса с id={} для периода с {} по {}. Список uri {}.",
+                    app.getId(), start, end, uris);
         }
+        return StatsMapper.toViewStats(stats, app);
     }
 
     @Override
@@ -92,23 +82,24 @@ public class StatsServiceImpl implements StatsService {
         Instant start = parseDateTime(startDecoded);
         Instant end = parseDateTime(endDecoded);
 
+        App app = findAppByName(nameApp);
+
+        Map<String, Long> stats;
         if (uris.isEmpty()) {
-            Map<Long, Long> stats = statsRepository.getUniqueStatsByTime(start, end);
-            List<Long> appIds = new ArrayList<>(stats.keySet());
-            List<App> apps = new ArrayList<>(appRepository.findAppsByIds(appIds));
-            log.debug("Запрос уникальной статистики для периода с {} по {}.",
-                    start, end);
-            return StatsMapper.toViewStats(stats, apps);
+            stats = statsRepository.getUniqueStatsByTime(start, end);
+            log.debug("Запрос уникальной статистики сервиса с id={} для периода с {} по {}.",
+                    app.getId(), start, end);
         } else {
-            List<App> apps = new ArrayList<>(appRepository.findAppsByUris(uris));
-            List<Long> appsIds = apps.stream()
-                    .map(App::getId)
-                    .collect(Collectors.toList());
-            Map<Long, Long> stats = statsRepository.getUniqueStatsByAppIds(start, end, appsIds);
-            log.debug("Запрос уникальной статистики для периода с {} по {}. Список uri {}.",
-                    start, end, uris);
-            return StatsMapper.toViewStats(stats, apps);
+            stats = statsRepository.getUniqueStatsByUris(start, end, uris);
+            log.debug("Запрос уникальной статистики сервиса с id={} для периода с {} по {}. Список uri {}.",
+                    app.getId(), start, end, uris);
         }
+        return StatsMapper.toViewStats(stats, app);
+    }
+
+    private App findAppByName(String nameApp) {
+        Long id = statsRepository.findIdByNameApp(nameApp);
+        return statsRepository.findAppById(id);
     }
 
     private String decodeDateTime(String dateTime) {
