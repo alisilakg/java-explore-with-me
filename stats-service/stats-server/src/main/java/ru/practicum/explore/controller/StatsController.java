@@ -32,11 +32,11 @@ public class StatsController {
                                                        @RequestParam(defaultValue = "false") Boolean unique,
                                                        @RequestParam(required = false, defaultValue = "ewm-main-service") String nameApp) {
         log.info("Получен GET-запрос к эндпоинту: '/stats' из сервиса с названием = {} на получение статистики" +
-                " с параметрами start={}, end={}, uris={}, unique={}", nameApp, start, end, uris, unique); if (unique) {
+                " с параметрами start={}, end={}, uris={}, unique={}", nameApp, start, end, uris, unique);
+        if (unique) {
             return ResponseEntity.ok(statsService.getUniqueStats(start, end, uris, nameApp));
-        } else {
-            return ResponseEntity.ok(statsService.getStats(start, end, uris, nameApp));
         }
+        return ResponseEntity.ok(statsService.getStats(start, end, uris, nameApp));
     }
 
 }

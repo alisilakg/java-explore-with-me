@@ -1,52 +1,48 @@
 package ru.practicum.explore;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.explore.dto.EndpointHitDto;
+import ru.practicum.explore.dto.ViewStatsDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class StatsClient extends BaseClient {
-    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String SERVER_URL = "http://stats-server:9090";
 
-    @Autowired
-    public StatsClient(RestTemplateBuilder builder) {
-        super(
-                builder
-                        .uriTemplateHandler(new DefaultUriBuilderFactory(SERVER_URL))
-                        .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-                        .build()
-        );
+    public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
+        super(serverUrl, builder);
     }
 
-    public ResponseEntity<Object> postHits(EndpointHitDto endpointHitDto) {
-        return post("/hit", endpointHitDto);
+    public ViewStatsDto postHits(EndpointHitDto endpointHitDto) {
+        Gson gson = new Gson();
+
+        ResponseEntity<Object> objectResponseEntity = post("/hit", endpointHitDto);
+        String json = gson.toJson(objectResponseEntity.getBody());
+        return gson.fromJson(json, ViewStatsDto.class);
     }
 
-    public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean uniq, String nameApp) {
-        Map<String, Object> params = Map.of(
-                "start", encode(start),
-                "end", encode(end),
+    public List<ViewStatsDto> getStats(String start, String end, List<String> uris, Boolean unique, String nameApp) {
+        Gson gson = new Gson();
+        Map<String, Object> parameters = Map.of(
                 "uris", String.join(",", uris),
-                "unique", uniq,
+                "unique", unique,
+                "start", start,
+                "end", end,
                 "nameApp", nameApp
         );
-        return get("/stats?start={start}&end={end}&uris={uris}&uniq={uniq}&nameApp={nameApp}", params);
-    }
+        ResponseEntity<Object> objectResponseEntity =
+                get("/stats?start={start}&end={end}&uris={uris}&unique={unique}&nameApp={nameApp}", parameters);
+        String json = gson.toJson(objectResponseEntity.getBody());
+        ViewStatsDto[] viewStatDtoArray = gson.fromJson(json, ViewStatsDto[].class);
 
-    private String encode(LocalDateTime dateTime) {
-        String dateTimeString = dateTime.format(FORMAT);
-        return URLEncoder.encode(dateTimeString, StandardCharsets.UTF_8);
+        return Arrays.asList(viewStatDtoArray);
     }
 }
