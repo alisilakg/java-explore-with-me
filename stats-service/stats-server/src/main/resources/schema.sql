@@ -1,4 +1,4 @@
--- DROP TABLE IF EXISTS apps, hits;
+DROP TABLE IF EXISTS apps, hits;
 
 CREATE TABLE IF NOT EXISTS apps
 (
