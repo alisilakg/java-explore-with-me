@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.explore.dto.ViewStatsDto;
+import ru.practicum.explore.error.exception.ValidationException;
 import ru.practicum.explore.mapper.EndpointHitMapper;
 import ru.practicum.explore.mapper.StatsMapper;
 import ru.practicum.explore.repository.StatsRepository;
@@ -56,10 +57,10 @@ public class StatsServiceImpl implements StatsService {
     public List<ViewStatsDto> getStats(String startEncoded, String endEncoded, List<String> uris, String nameApp) {
         String startDecoded = decodeDateTime(startEncoded);
         String endDecoded = decodeDateTime(endEncoded);
-
         Instant start = parseDateTime(startDecoded);
         Instant end = parseDateTime(endDecoded);
         App app = findAppByName(nameApp);
+        checkDate(start, end);
 
         Map<String, Long> stats;
         if (uris.isEmpty()) {
@@ -78,9 +79,9 @@ public class StatsServiceImpl implements StatsService {
     public List<ViewStatsDto> getUniqueStats(String startEncoded, String endEncoded, List<String> uris, String nameApp) {
         String startDecoded = decodeDateTime(startEncoded);
         String endDecoded = decodeDateTime(endEncoded);
-
         Instant start = parseDateTime(startDecoded);
         Instant end = parseDateTime(endDecoded);
+        checkDate(start, end);
 
         App app = findAppByName(nameApp);
 
@@ -98,7 +99,15 @@ public class StatsServiceImpl implements StatsService {
     }
 
     private App findAppByName(String nameApp) {
-        Long id = statsRepository.findIdByNameApp(nameApp);
+        Long id;
+        try {
+            id = statsRepository.findIdByNameApp(nameApp);
+        } catch (EmptyResultDataAccessException e) {
+            App appToAdd = App.builder()
+                    .name(nameApp)
+                    .build();
+            id = statsRepository.addApp(appToAdd).getId();
+        }
         return statsRepository.findAppById(id);
     }
 
@@ -109,6 +118,14 @@ public class StatsServiceImpl implements StatsService {
     private Instant parseDateTime(String dateTime) {
         LocalDateTime localDateTime = LocalDateTime.parse(dateTime, formatter);
         return localDateTime.toInstant(ZONE_OFFSET);
+    }
+
+    private void checkDate(Instant start, Instant end) {
+        if (start != null && end != null) {
+            if (end.isBefore(start)) {
+                throw new ValidationException("Время окончания раньше времени начала.");
+            }
+        }
     }
 
 }

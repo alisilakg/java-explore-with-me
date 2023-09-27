@@ -1,9 +1,11 @@
 package ru.practicum.explore;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -11,8 +13,10 @@ import java.util.Map;
 public class BaseClient {
     protected final RestTemplate rest;
 
-    public BaseClient(RestTemplate rest) {
-        this.rest = rest;
+    public BaseClient(String serverUrl, RestTemplateBuilder builder) {
+        this.rest = builder
+                .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
+                .build();
     }
 
     protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> params) {

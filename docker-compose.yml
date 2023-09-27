@@ -9,7 +9,7 @@ services:
     depends_on:
       - stats-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
 
@@ -21,9 +21,10 @@ services:
     ports:
       - "6541:5432"
     environment:
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=stats
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+
 
   ewm-service:
     build: ewm-service
@@ -34,7 +35,8 @@ services:
     depends_on:
       - ewm-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5431/ewm
+      - STATS_SERVER_URL=http://stats-server:9090
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
 
@@ -47,6 +49,6 @@ services:
     ports:
       - "6542:5432"
     environment:
-      - POSTGRES_DB=ewm
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
