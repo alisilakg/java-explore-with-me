@@ -44,7 +44,8 @@ public class EventPublicController {
         log.info("Получен GET-запрос к эндпоинту: '/events' на получение краткой информации о событиях.");
         String ip = request.getRemoteAddr();
         String url = request.getRequestURI();
-        return eventService.getAllPublishedEvents(text,
+        return eventService.getAllPublishedEvents(
+                text,
                 categories,
                 paid,
                 rangeStart,

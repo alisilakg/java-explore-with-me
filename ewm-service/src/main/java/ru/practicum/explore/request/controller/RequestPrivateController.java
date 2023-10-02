@@ -23,7 +23,6 @@ public class RequestPrivateController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
-                                       //@NotNull(message = "Отсутствует id события в запросе")
                                                  @RequestParam Long eventId) {
         return requestService.createRequest(userId, eventId);
     }

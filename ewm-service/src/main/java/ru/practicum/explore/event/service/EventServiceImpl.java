@@ -34,26 +34,25 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class EventServiceImpl implements EventService {
-    private static final String URI = "/events";
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
-    private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final RequestRepository requestRepository;
     private final StatsClient statClient;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, UserRepository userRepository,
-                            CategoryRepository categoryRepository, LocationRepository locationRepository,
-                            RequestRepository requestRepository, StatsClient statClient) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper,
+                            LocationRepository locationRepository, RequestRepository requestRepository,
+                            StatsClient statClient, UserRepository userRepository, CategoryRepository categoryRepository) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
         this.locationRepository = locationRepository;
         this.requestRepository = requestRepository;
         this.statClient = statClient;
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
@@ -229,6 +228,11 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
+    @Override
+    public Event findEventByIdForMapping(Long event) {
+        return getEventIfExists(event);
+    }
+
     private void publishEvent(UpdateEventAdminRequest request, Event event) {
         EventState state = event.getState();
         if (state == EventState.PUBLISHED) {
@@ -336,21 +340,6 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void checkUser(Long userId) {
-        userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + userId + " не зарегестрирован"));
-    }
-
-    private Event getEventIfExists(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() ->
-                new NotFoundException("Событие с id = " + eventId + " не надено"));
-    }
-
-    private Category getCategoryIfExists(Long catId) {
-        return categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Category not found."));
-    }
-
     private void saveHit(String ip, String url) {
         String app = "ewm-main-service";
         EndpointHitDto endpointHitDto = new EndpointHitDto(null, app, url, ip, LocalDateTime.now());
@@ -406,6 +395,21 @@ public class EventServiceImpl implements EventService {
 
     private void setStatus(List<Request> requestsToUpdate, RequestStatus status) {
         requestsToUpdate.forEach(r -> r.setStatus(status));
+    }
+
+    private Event getEventIfExists(Long eventId) {
+        return eventRepository.findById(eventId).orElseThrow(() ->
+                new NotFoundException("Событие с id = " + eventId + " не найдено."));
+    }
+
+    private void checkUser(Long userId) {
+        userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + userId + " не зарегестрирован"));
+    }
+
+    private Category getCategoryIfExists(Long catId) {
+        return categoryRepository.findById(catId)
+                .orElseThrow(() -> new NotFoundException("Категория не найдена."));
     }
 
 }
