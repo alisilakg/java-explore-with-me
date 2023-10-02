@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users, categories, locations, events, requests, compilations, compilations_events, comments;
+DROP TABLE IF EXISTS users, categories, locations, events, requests, compilations, compilations_events, comments, comments_events;
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -85,3 +85,14 @@ CREATE TABLE IF NOT EXISTS comments (
     CONSTRAINT fk_comments_to_users FOREIGN KEY (author_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_to_events FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS comments_events
+(
+    comment_id BIGINT NOT NULL,
+    event_id   BIGINT NOT NULL,
+    CONSTRAINT fk_comments_events_to_comments
+    FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_events_to_events
+    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+    PRIMARY KEY (comment_id, event_id)
+    );
