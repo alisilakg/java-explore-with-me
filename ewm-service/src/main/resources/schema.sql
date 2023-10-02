@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users, categories, locations, events, requests, compilations, compilation_events;
+DROP TABLE IF EXISTS users, categories, locations, events, requests, compilations, compilations_events;
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -66,14 +66,14 @@ CREATE TABLE IF NOT EXISTS compilations
     CONSTRAINT UQ_COMPILATION_TITLE UNIQUE (compilation_title)
 );
 
-CREATE TABLE IF NOT EXISTS compilation_events
+CREATE TABLE IF NOT EXISTS compilations_events
 (
     compilation_id BIGINT NOT NULL,
     event_id       BIGINT NOT NULL,
 
-    CONSTRAINT fk_compilation_events_to_compilations
+    CONSTRAINT fk_compilations_events_to_compilations
         FOREIGN KEY (compilation_id) REFERENCES compilations (id) ON DELETE CASCADE,
-    CONSTRAINT fk_compilation_events_to_events
+    CONSTRAINT fk_compilations_events_to_events
         FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
 
     PRIMARY KEY (compilation_id, event_id)
