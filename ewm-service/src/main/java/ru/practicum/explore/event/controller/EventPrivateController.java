@@ -14,6 +14,10 @@ import ru.practicum.explore.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.explore.request.dto.ParticipationRequestDto;
 import ru.practicum.explore.request.service.RequestService;
+
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
+
 import static ru.practicum.explore.validation.ValidationGroups.Create;
 import static ru.practicum.explore.validation.ValidationGroups.Update;
 
@@ -45,7 +49,9 @@ public class EventPrivateController {
 
     @GetMapping
     public List<EventShortDto> getShortEventsByUserId(@PathVariable Long userId,
+                                                      @PositiveOrZero
                                                       @RequestParam(defaultValue = "0") Integer from,
+                                                      @Positive
                                                       @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events' на получение списка всех событий пользователя с ID={}", userId);
         return eventService.getShortEventsByUserId(userId, from, size);
@@ -70,7 +76,7 @@ public class EventPrivateController {
     @PatchMapping("/{eventId}/requests")
     public EventRequestStatusUpdateResult updateRequests(@PathVariable long userId,
                                                          @PathVariable long eventId,
-                                                         @RequestBody EventRequestStatusUpdateRequest
+                                                         @Validated(Update.class) @RequestBody EventRequestStatusUpdateRequest
                                                                  eventRequestStatusUpdateRequest) {
         log.info("Получен PATCH-запрос к эндпоинту: '/users/{userId}/events/{eventId}/requests' на изменение статуса " +
                 "заявки на участие в событии с ID={} пользователя с ID={}", eventId, userId);

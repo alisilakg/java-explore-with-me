@@ -10,6 +10,8 @@ import ru.practicum.explore.event.dto.EventShortDto;
 import ru.practicum.explore.event.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,7 +34,9 @@ public class EventPublicController {
                                                          LocalDateTime rangeEnd,
                                                      @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                      @RequestParam(defaultValue = "VIEWS") EventSort sort,
+                                                     @PositiveOrZero
                                                      @RequestParam(defaultValue = "0") Integer from,
+                                                     @Positive
                                                      @RequestParam(defaultValue = "10") Integer size,
                                                      HttpServletRequest request) {
         log.info("Получен GET-запрос к эндпоинту: '/events' на получение краткой информации о событиях.");

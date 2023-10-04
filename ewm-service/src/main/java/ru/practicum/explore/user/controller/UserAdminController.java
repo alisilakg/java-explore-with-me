@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.user.dto.NewUserRequest;
 import ru.practicum.explore.user.dto.UserDto;
 import ru.practicum.explore.user.service.UserService;
+
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
+
 import static ru.practicum.explore.validation.ValidationGroups.Create;
 
 import java.util.List;
@@ -29,7 +33,9 @@ public class UserAdminController {
 
     @GetMapping
     public List<UserDto> getAllUsers(@RequestParam(required = false) List<Long> ids,
+                                     @PositiveOrZero
                                      @RequestParam(defaultValue = "0") Integer from,
+                                     @Positive
                                      @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/admin/users' на получение всех пользователей");
         return userService.getListAllUsers(ids, from, size);

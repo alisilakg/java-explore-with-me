@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.comment.dto.CommentDto;
 import ru.practicum.explore.comment.service.CommentService;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,7 +29,9 @@ public class CommentPublicController {
                                            @RequestParam(required = false)
                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                                LocalDateTime rangeEnd,
+                                           @PositiveOrZero
                                            @RequestParam(defaultValue = "0") Integer from,
+                                           @Positive
                                            @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/comment/events/{eventId}' на получение " +
                 "всех комментариев события с возможностью фильтрации.");

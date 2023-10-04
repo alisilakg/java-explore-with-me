@@ -10,6 +10,9 @@ import ru.practicum.explore.comment.dto.NewCommentDto;
 import ru.practicum.explore.comment.dto.UpdateCommentDto;
 import ru.practicum.explore.comment.service.CommentService;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
+
 import static ru.practicum.explore.validation.ValidationGroups.Create;
 import static ru.practicum.explore.validation.ValidationGroups.Update;
 
@@ -34,7 +37,9 @@ public class CommentPrivateController {
 
     @GetMapping
     public List<CommentDto> getAllCommentsByUserId(@PathVariable Long userId,
+                                                   @PositiveOrZero
                                                    @RequestParam(defaultValue = "0") Integer from,
+                                                   @Positive
                                                    @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/comments' на получение всех комментариев " +
                 "пользователя с ID={}", userId);
