@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.StatsClient;
 import ru.practicum.explore.category.model.Category;
 import ru.practicum.explore.category.repository.CategoryRepository;
@@ -30,7 +31,6 @@ import ru.practicum.explore.user.model.User;
 import ru.practicum.explore.user.repository.UserRepository;
 import ru.practicum.explore.user.service.UserService;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -72,40 +72,26 @@ public class EventServiceImpl implements EventService {
         User user = userService.findUserByIdForMapping(userId);
         Event newEvent = EventMapper.toEvent(newEventDto, user, category);
         Event savedEvent = eventRepository.save(newEvent);
-//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
-//        savedEvent.setConfirmedRequests(countConfirmedRequests);
-//        Long views = countView(savedEvent);
-//        savedEvent.setViews(views);
         Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
         return EventMapper.toEventFullDto(eventWithViwesAndRequests);
-//        return EventMapper.toEventFullDto(eventRepository.save(savedEvent));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getFullEventById(Long userId, Long eventId) {
         checkUser(userId);
         Event event = getEventIfExists(eventId);
-//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
-//        event.setConfirmedRequests(countConfirmedRequests);
-//        Long views = countView(event);
-//        event.setViews(views);
         Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(event);
         return EventMapper.toEventFullDto(eventWithViwesAndRequests);
-//        return EventMapper.toEventFullDto(event);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getShortEventsByUserId(Long userId, Integer from, Integer size) {
         checkUser(userId);
         int page = from / size;
 
         List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
-//        for (Event event : events) {
-//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
-//            event.setConfirmedRequests(countConfirmedRequests);
-//            Long views = countView(event);
-//            event.setViews(views);
-//        }
         List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
         return eventsWithViewsAndRequests.stream()
                 .map(EventMapper::toEventShortDto)
@@ -123,16 +109,12 @@ public class EventServiceImpl implements EventService {
         updateEventFields(event, updateEventUserRequest);
         updateEventStateAction(event, updateEventUserRequest.getStateAction());
         Event savedEvent = eventRepository.save(event);
-//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
-//        savedEvent.setConfirmedRequests(countConfirmedRequests);
-//        Long views = countView(savedEvent);
-//        savedEvent.setViews(views);
         Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
         return EventMapper.toEventFullDto(eventWithViwesAndRequests);
-//        return EventMapper.toEventFullDto(savedEvent);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getAllEventsByAdmin(List<Long> users,
                                                   List<EventState> states,
                                                   List<Long> categories,
@@ -151,12 +133,6 @@ public class EventServiceImpl implements EventService {
                 rangeStart,
                 rangeEnd,
                 PageRequest.of(from, size));
-//        for (Event event : events) {
-//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
-//            event.setConfirmedRequests(countConfirmedRequests);
-//            Long views = countView(event);
-//            event.setViews(views);
-//        }
         List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
         List<EventFullDto> eventDtos = EventMapper.toEventFullDto(eventsWithViewsAndRequests);
 
@@ -187,14 +163,12 @@ public class EventServiceImpl implements EventService {
             }
         }
         Event savedEvent = eventRepository.save(event);
-//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
-//        savedEvent.setConfirmedRequests(countConfirmedRequests);
-//        Long views = countView(savedEvent);
         Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
         return EventMapper.toEventFullDto(eventWithViwesAndRequests);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getAllPublishedEvents(String text,
                                                      List<Long> categories,
                                                      Boolean paid,
@@ -223,22 +197,13 @@ public class EventServiceImpl implements EventService {
                     .paid(paid)
                     .build();
         List<Event> events = eventRepository.findAllEventsByParams(params);
-//        for (Event event : events) {
-//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
-//            event.setConfirmedRequests(countConfirmedRequests);
-//            Long views = countView(event);
-//            event.setViews(views);
-//        }
         List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
         return eventsWithViewsAndRequests.stream().map(EventMapper::toEventShortDto)
                 .sorted(getComparator(sort)).collect(Collectors.toList());
     }
 
-    private Comparator<EventShortDto> getComparator(EventSort sortType) {
-        return EventShortDto.getComparator(sortType);
-    }
-
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getPublishedEventById(Long eventId, String ip, String url) {
         saveHit(ip, url);
 
@@ -249,10 +214,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено.");
         }
         Event savedEvent = eventRepository.save(event);
-//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
-//        savedEvent.setConfirmedRequests(countConfirmedRequests);
-//        Long views = countView(savedEvent);
-//        savedEvent.setViews(views);
         Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
         return EventMapper.toEventFullDto(eventWithViwesAndRequests);
     }
@@ -279,11 +240,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Event findEventByIdForMapping(Long eventId) {
         return getEventWithViewsAndCountRequests(getEventIfExists(eventId));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Event> getEventsWithViewsAndCountRequests(List<Event> events) {
         for (Event event : events) {
          getEventWithViewsAndCountRequests(event);
@@ -292,6 +255,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Event getEventWithViewsAndCountRequests(Event savedEvent) {
         if (savedEvent.getState() == EventState.PUBLISHED) {
             Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
@@ -306,6 +270,10 @@ public class EventServiceImpl implements EventService {
         }
 
         return savedEvent;
+    }
+
+    private Comparator<EventShortDto> getComparator(EventSort sortType) {
+        return EventShortDto.getComparator(sortType);
     }
 
     private void publishEvent(UpdateEventAdminRequest request, Event event) {

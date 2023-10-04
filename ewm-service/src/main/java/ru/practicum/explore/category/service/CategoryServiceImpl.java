@@ -14,7 +14,6 @@ import ru.practicum.explore.category.repository.CategoryRepository;
 import ru.practicum.explore.error.exception.ConflictException;
 import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.event.repository.EventRepository;
-import ru.practicum.explore.event.service.EventService;
 
 import java.util.List;
 
@@ -60,18 +59,21 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories(Integer from, Integer size) {
         Page<Category> categories = categoryRepository.findAll(PageRequest.of(from / size, size));
         return categories.map(CategoryMapper::toCategoryDto).getContent();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryDto getCategoryById(Long catId) {
         Category category = getCategoryIfExists(catId);
         return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Category findCategoryByIdForMapping(Long categoryId) {
         return getCategoryIfExists(categoryId);
     }

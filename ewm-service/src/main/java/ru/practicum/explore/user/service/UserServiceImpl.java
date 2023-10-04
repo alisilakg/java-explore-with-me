@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> getListAllUsers(@Nullable List<Long> ids, Integer from, Integer size) {
         if (Objects.nonNull(ids)) {
             return UserMapper.toUserDto(userRepository.findAllById(ids));
@@ -51,6 +52,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User findUserByIdForMapping(Long userId) {
        return getUserIfExists(userId);
     }

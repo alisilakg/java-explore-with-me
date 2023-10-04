@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.comment.mapper.CommentMapper;
 import ru.practicum.explore.comment.dto.CommentDto;
 import ru.practicum.explore.comment.dto.NewCommentDto;
@@ -14,6 +15,7 @@ import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.error.exception.ValidationException;
 import ru.practicum.explore.event.model.Event;
 import ru.practicum.explore.event.service.EventService;
+import ru.practicum.explore.pagination.CustomPageRequest;
 import ru.practicum.explore.user.model.User;
 import ru.practicum.explore.user.service.UserService;
 
@@ -31,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserService userService;
 
     @Override
+    @Transactional
     public CommentDto createComment(NewCommentDto newCommentDto, Long userId) {
         User user = userService.findUserByIdForMapping(userId);
         Event event = eventService.findEventByIdForMapping(newCommentDto.getEvent());
@@ -39,6 +42,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentDto> getAllComments(Long eventId, List<Long> users, String text, LocalDateTime rangeStart,
                                            LocalDateTime rangeEnd, int from, int size) {
         if (rangeStart != null || rangeEnd != null) {
@@ -49,24 +53,24 @@ public class CommentServiceImpl implements CommentService {
         if (users != null && users.size() == 1 && users.get(0).equals(0L)) {
             users = null;
         }
-
+        PageRequest pageRequest = CustomPageRequest.of(from, size);
         List<Comment> comments = commentRepository.findAllCommentsByParams(
                 eventId,
                 users,
                 text,
                 rangeStart,
                 rangeEnd,
-                PageRequest.of(from, size));
+                pageRequest);
 
         return CommentMapper.toCommentDto(getCommentsWithEventWithViewsAndRequests(comments));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CommentDto> getAllCommentsByUserId(Long userId, Integer from, Integer size) {
         userService.findUserByIdForMapping(userId);
-        int page = from / size;
-
-        List<Comment> comments = commentRepository.findByAuthorId(userId, PageRequest.of(page, size));
+        PageRequest pageRequest = CustomPageRequest.of(from, size);
+        List<Comment> comments = commentRepository.findByAuthorId(userId, pageRequest);
         List<Comment> commentsWithEventsWithViewsAndRequests = getCommentsWithEventWithViewsAndRequests(comments);
 
         return commentsWithEventsWithViewsAndRequests.stream()
@@ -75,6 +79,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CommentDto getCommentById(Long userId, Long commentId) {
         userService.findUserByIdForMapping(userId);
         Comment comment = getCommentWithEventWithViewsAndRequests(commentId);
@@ -82,6 +87,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto updateComment(UpdateCommentDto updateCommentDto, Long userId, Long commentId) {
         userService.findUserByIdForMapping(userId);
         Comment comment = getCommentWithEventWithViewsAndRequests(commentId);
@@ -96,10 +102,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long userId, Long commentId) {
         getCommentIfExists(commentId);
         userService.findUserByIdForMapping(userId);
-        List<Comment> comments = commentRepository.findByAuthorId(userId, PageRequest.of(0, 10));
+        PageRequest pageRequest = CustomPageRequest.of(0, 10);
+        List<Comment> comments = commentRepository.findByAuthorId(userId, pageRequest);
         if (comments.stream().anyMatch(comment -> comment.getId().equals(commentId))) {
             commentRepository.deleteById(commentId);
         } else {

@@ -3,6 +3,7 @@ package ru.practicum.explore.request.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.enums.EventState;
 import ru.practicum.explore.enums.RequestStatus;
 import ru.practicum.explore.error.exception.ConflictException;
@@ -16,7 +17,6 @@ import ru.practicum.explore.request.repository.RequestRepository;
 import ru.practicum.explore.user.model.User;
 import ru.practicum.explore.user.repository.UserRepository;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,24 +55,8 @@ public class RequestServiceImpl implements RequestService {
         return RequestMapper.toRequestDto(requestRepository.save(newRequest));
     }
 
-    private Request completeNewRequest(Long userId, Event event) {
-        User user = getUserIfExists(userId);
-        boolean needConfirmation = event.getRequestModeration();
-        boolean hasParticipantsLimit = event.getParticipantLimit() != 0;
-        RequestStatus status = needConfirmation && hasParticipantsLimit ? RequestStatus.PENDING : RequestStatus.CONFIRMED;
-        return Request.builder()
-                .requester(user)
-                .status(status)
-                .event(event)
-                .build();
-    }
-
-    private User getUserIfExists(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не зарегестрирован"));
-    }
-
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getAllRequestsByUser(Long userId) {
         getUserIfExists(userId);
         List<Request> requests = requestRepository.findByRequesterId(userId);
@@ -91,6 +75,7 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId) {
         getUserIfExists(userId);
         return requestRepository.findByEventId(eventId)
@@ -100,7 +85,25 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Long countConfirmedRequestsByEventId(Long id) {
         return requestRepository.getCountByEventIdAndState(id, RequestStatus.CONFIRMED);
+    }
+
+    private Request completeNewRequest(Long userId, Event event) {
+        User user = getUserIfExists(userId);
+        boolean needConfirmation = event.getRequestModeration();
+        boolean hasParticipantsLimit = event.getParticipantLimit() != 0;
+        RequestStatus status = needConfirmation && hasParticipantsLimit ? RequestStatus.PENDING : RequestStatus.CONFIRMED;
+        return Request.builder()
+                .requester(user)
+                .status(status)
+                .event(event)
+                .build();
+    }
+
+    private User getUserIfExists(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не зарегестрирован"));
     }
 }
