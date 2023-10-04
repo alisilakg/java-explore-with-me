@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import ru.practicum.explore.StatsClient;
 import ru.practicum.explore.category.model.Category;
 import ru.practicum.explore.category.repository.CategoryRepository;
+import ru.practicum.explore.category.service.CategoryService;
 import ru.practicum.explore.dto.EndpointHitDto;
+import ru.practicum.explore.dto.ViewStatsDto;
 import ru.practicum.explore.enums.*;
 import ru.practicum.explore.error.exception.ConflictException;
 import ru.practicum.explore.error.exception.NotFoundException;
@@ -23,10 +25,14 @@ import ru.practicum.explore.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.explore.request.mapper.RequestMapper;
 import ru.practicum.explore.request.model.Request;
 import ru.practicum.explore.request.repository.RequestRepository;
+import ru.practicum.explore.request.service.RequestService;
+import ru.practicum.explore.user.model.User;
 import ru.practicum.explore.user.repository.UserRepository;
+import ru.practicum.explore.user.service.UserService;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,13 +41,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class EventServiceImpl implements EventService {
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
     private final LocationRepository locationRepository;
     private final RequestRepository requestRepository;
     private final StatsClient statClient;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
+    private final UserService userService;
+    private final RequestService requestService;
 
     @Override
     @Transactional
@@ -57,15 +68,30 @@ public class EventServiceImpl implements EventService {
         }
         Location location = getLocation(newEventDto.getLocation());
         newEventDto.setLocation(location);
-        Event newEvent = eventMapper.toEvent(newEventDto, userId);
-        return eventMapper.toEventFullDto(eventRepository.save(newEvent));
+        Category category = categoryService.findCategoryByIdForMapping(newEventDto.getCategory());
+        User user = userService.findUserByIdForMapping(userId);
+        Event newEvent = EventMapper.toEvent(newEventDto, user, category);
+        Event savedEvent = eventRepository.save(newEvent);
+//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
+//        savedEvent.setConfirmedRequests(countConfirmedRequests);
+//        Long views = countView(savedEvent);
+//        savedEvent.setViews(views);
+        Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
+        return EventMapper.toEventFullDto(eventWithViwesAndRequests);
+//        return EventMapper.toEventFullDto(eventRepository.save(savedEvent));
     }
 
     @Override
     public EventFullDto getFullEventById(Long userId, Long eventId) {
         checkUser(userId);
         Event event = getEventIfExists(eventId);
-        return eventMapper.toEventFullDto(event);
+//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
+//        event.setConfirmedRequests(countConfirmedRequests);
+//        Long views = countView(event);
+//        event.setViews(views);
+        Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(event);
+        return EventMapper.toEventFullDto(eventWithViwesAndRequests);
+//        return EventMapper.toEventFullDto(event);
     }
 
     @Override
@@ -74,8 +100,15 @@ public class EventServiceImpl implements EventService {
         int page = from / size;
 
         List<Event> events = eventRepository.findByInitiatorId(userId, PageRequest.of(page, size));
-        return events.stream()
-                .map(eventMapper::toEventShortDto)
+//        for (Event event : events) {
+//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
+//            event.setConfirmedRequests(countConfirmedRequests);
+//            Long views = countView(event);
+//            event.setViews(views);
+//        }
+        List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
+        return eventsWithViewsAndRequests.stream()
+                .map(EventMapper::toEventShortDto)
                 .collect(Collectors.toList());
     }
 
@@ -89,8 +122,14 @@ public class EventServiceImpl implements EventService {
         }
         updateEventFields(event, updateEventUserRequest);
         updateEventStateAction(event, updateEventUserRequest.getStateAction());
-        eventRepository.save(event);
-        return eventMapper.toEventFullDto(event);
+        Event savedEvent = eventRepository.save(event);
+//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
+//        savedEvent.setConfirmedRequests(countConfirmedRequests);
+//        Long views = countView(savedEvent);
+//        savedEvent.setViews(views);
+        Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
+        return EventMapper.toEventFullDto(eventWithViwesAndRequests);
+//        return EventMapper.toEventFullDto(savedEvent);
     }
 
     @Override
@@ -112,8 +151,14 @@ public class EventServiceImpl implements EventService {
                 rangeStart,
                 rangeEnd,
                 PageRequest.of(from, size));
-
-        List<EventFullDto> eventDtos = eventMapper.toEventFullDto(events);
+//        for (Event event : events) {
+//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
+//            event.setConfirmedRequests(countConfirmedRequests);
+//            Long views = countView(event);
+//            event.setViews(views);
+//        }
+        List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
+        List<EventFullDto> eventDtos = EventMapper.toEventFullDto(eventsWithViewsAndRequests);
 
         return eventDtos.stream().peek(eventDto -> eventDto.setConfirmedRequests(
                         requestRepository.getCountByEventIdAndState(eventDto.getId(), RequestStatus.CONFIRMED)))
@@ -141,7 +186,12 @@ public class EventServiceImpl implements EventService {
                     break;
             }
         }
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        Event savedEvent = eventRepository.save(event);
+//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
+//        savedEvent.setConfirmedRequests(countConfirmedRequests);
+//        Long views = countView(savedEvent);
+        Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
+        return EventMapper.toEventFullDto(eventWithViwesAndRequests);
     }
 
     @Override
@@ -173,7 +223,14 @@ public class EventServiceImpl implements EventService {
                     .paid(paid)
                     .build();
         List<Event> events = eventRepository.findAllEventsByParams(params);
-        return events.stream().map(eventMapper::toEventShortDto)
+//        for (Event event : events) {
+//            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
+//            event.setConfirmedRequests(countConfirmedRequests);
+//            Long views = countView(event);
+//            event.setViews(views);
+//        }
+        List<Event> eventsWithViewsAndRequests = getEventsWithViewsAndCountRequests(events);
+        return eventsWithViewsAndRequests.stream().map(EventMapper::toEventShortDto)
                 .sorted(getComparator(sort)).collect(Collectors.toList());
     }
 
@@ -191,8 +248,13 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено.");
         }
-
-        return eventMapper.toEventFullDto(event);
+        Event savedEvent = eventRepository.save(event);
+//        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(eventId);
+//        savedEvent.setConfirmedRequests(countConfirmedRequests);
+//        Long views = countView(savedEvent);
+//        savedEvent.setViews(views);
+        Event eventWithViwesAndRequests = getEventWithViewsAndCountRequests(savedEvent);
+        return EventMapper.toEventFullDto(eventWithViwesAndRequests);
     }
 
     @Override
@@ -217,8 +279,28 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event findEventByIdForMapping(Long event) {
-        return getEventIfExists(event);
+    public Event findEventByIdForMapping(Long eventId) {
+        return getEventWithViewsAndCountRequests(getEventIfExists(eventId));
+    }
+
+    @Override
+    public List<Event> getEventsWithViewsAndCountRequests(List<Event> events) {
+        for (Event event : events) {
+            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
+            event.setConfirmedRequests(countConfirmedRequests);
+            Long views = countView(event);
+            event.setViews(views);
+        }
+        return events;
+    }
+
+    @Override
+    public Event getEventWithViewsAndCountRequests(Event savedEvent) {
+        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
+        savedEvent.setConfirmedRequests(countConfirmedRequests);
+        Long views = countView(savedEvent);
+        savedEvent.setViews(views);
+        return savedEvent;
     }
 
     private void publishEvent(UpdateEventAdminRequest request, Event event) {
@@ -398,6 +480,33 @@ public class EventServiceImpl implements EventService {
     private Category getCategoryIfExists(Long catId) {
         return categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Категория не найдена."));
+    }
+
+    private long countView(Event event) {
+        long views = 0L;
+        if (event.getState() == EventState.PUBLISHED) {
+            List<ViewStatsDto> viewStatsDto = getEventsViewsList(List.of(event));
+            views = viewStatsDto.isEmpty() ? 0 : (int) viewStatsDto.get(0).getHits();
+        }
+        return views;
+    }
+
+    private List<ViewStatsDto> getEventsViewsList(List<Event> events) {
+        List<String> eventUris = events
+                .stream()
+                .map(e -> String.format("/events/%s", e.getId()))
+                .collect(Collectors.toList());
+        LocalDateTime start = events.get(0).getCreatedOn();
+        for (Event event : events) {
+            if (event.getCreatedOn().isBefore(start)) {
+                start = event.getCreatedOn();
+            }
+        }
+        LocalDateTime end = LocalDateTime.now();
+        String app = "ewm-main-service";
+        Boolean unique = true;
+
+        return statClient.getStats(start.format(DATE_FORMATTER), end.format(DATE_FORMATTER), eventUris, unique, app);
     }
 
 }

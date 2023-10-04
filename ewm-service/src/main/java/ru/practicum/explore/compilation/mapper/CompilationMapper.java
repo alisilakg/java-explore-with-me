@@ -12,12 +12,10 @@ import ru.practicum.explore.event.repository.EventRepository;
 @Component
 public class CompilationMapper {
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
 
     @Autowired
-    public CompilationMapper(EventRepository eventRepository, EventMapper eventMapper) {
+    public CompilationMapper(EventRepository eventRepository) {
         this.eventRepository = eventRepository;
-        this.eventMapper = eventMapper;
     }
 
 
@@ -35,7 +33,7 @@ public class CompilationMapper {
                 .id(compilation.getId())
                 .pinned(compilation.getPinned())
                 .title(compilation.getTitle())
-                .events(eventMapper.toEventShortDto(compilation.getEvents()))
+                .events(EventMapper.toEventShortDto(compilation.getEvents()))
                 .build();
     }
 

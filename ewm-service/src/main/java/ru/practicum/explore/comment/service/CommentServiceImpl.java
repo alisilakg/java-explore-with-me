@@ -12,7 +12,11 @@ import ru.practicum.explore.comment.model.Comment;
 import ru.practicum.explore.comment.repository.CommentRepository;
 import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.error.exception.ValidationException;
-import ru.practicum.explore.user.repository.UserRepository;
+import ru.practicum.explore.event.mapper.EventMapper;
+import ru.practicum.explore.event.model.Event;
+import ru.practicum.explore.event.service.EventService;
+import ru.practicum.explore.user.model.User;
+import ru.practicum.explore.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,14 +28,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
-    private final CommentMapper commentMapper;
-    private final UserRepository userRepository;
+    private final EventService eventService;
+    private final UserService userService;
 
     @Override
     public CommentDto createComment(NewCommentDto newCommentDto, Long userId) {
-        checkUser(userId);
-        Comment comment = commentMapper.toComment(newCommentDto, userId);
-        return commentMapper.toCommentDto(commentRepository.save(comment));
+        //checkUser(userId);
+        User user = userService.findUserByIdForMapping(userId);
+        Event event = eventService.findEventByIdForMapping(newCommentDto.getEvent());
+        Comment comment = CommentMapper.toComment(newCommentDto, user, event);
+        return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     @Override
@@ -53,31 +59,44 @@ public class CommentServiceImpl implements CommentService {
                 rangeStart,
                 rangeEnd,
                 PageRequest.of(from, size));
+        for (Comment comment : comments) {
+            Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
+            comment.setEvent(event);
+        }
 
-        return commentMapper.toCommentDto(comments);
+        return CommentMapper.toCommentDto(comments);
     }
 
     @Override
     public List<CommentDto> getAllCommentsByUserId(Long userId, Integer from, Integer size) {
-        checkUser(userId);
+        //checkUser(userId);
+        userService.findUserByIdForMapping(userId);
         int page = from / size;
 
         List<Comment> comments = commentRepository.findByAuthorId(userId, PageRequest.of(page, size));
+        for (Comment comment : comments) {
+            Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
+            comment.setEvent(event);
+        }
         return comments.stream()
-                .map(commentMapper::toCommentDto)
+                .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public CommentDto getCommentById(Long userId, Long commentId) {
-        checkUser(userId);
+        //checkUser(userId);
+        userService.findUserByIdForMapping(userId);
         Comment comment = getCommentIfExists(commentId);
-        return commentMapper.toCommentDto(comment);
+        Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
+        comment.setEvent(event);
+        return CommentMapper.toCommentDto(comment);
     }
 
     @Override
     public CommentDto updateComment(UpdateCommentDto updateCommentDto, Long userId, Long commentId) {
-        checkUser(userId);
+        //checkUser(userId);
+        userService.findUserByIdForMapping(userId);
         Comment comment = getCommentIfExists(commentId);
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new ValidationException("Изменить комментарий может только его автор.");
@@ -85,14 +104,17 @@ public class CommentServiceImpl implements CommentService {
         if (Objects.nonNull(updateCommentDto.getText()) && !updateCommentDto.getText().isBlank()) {
             comment.setText(updateCommentDto.getText());
         }
-        commentRepository.save(comment);
-        return commentMapper.toCommentDto(comment);
+        Comment savedComment = commentRepository.save(comment);
+        Event event = eventService.findEventByIdForMapping(savedComment.getEvent().getId());
+        savedComment.setEvent(event);
+        return CommentMapper.toCommentDto(savedComment);
     }
 
     @Override
     public void deleteComment(Long userId, Long commentId) {
         getCommentIfExists(commentId);
-        checkUser(userId);
+        //checkUser(userId);
+        userService.findUserByIdForMapping(userId);
         List<Comment> comments = commentRepository.findByAuthorId(userId, PageRequest.of(0, 10));
         if (comments.stream().anyMatch(comment -> comment.getId().equals(commentId))) {
             commentRepository.deleteById(commentId);
@@ -107,8 +129,8 @@ public class CommentServiceImpl implements CommentService {
                 new NotFoundException("Комментарий с id = " + commentId + " не найден."));
     }
 
-    private void checkUser(Long userId) {
-        userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + userId + " не зарегистрирован."));
-    }
+//    private void checkUser(Long userId) {
+//        userRepository.findById(userId).orElseThrow(() ->
+//                new NotFoundException("Пользователь с id = " + userId + " не зарегистрирован."));
+//    }
 }

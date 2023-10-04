@@ -15,12 +15,14 @@ import ru.practicum.explore.error.exception.ConflictException;
 import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.event.model.Event;
 import ru.practicum.explore.event.repository.EventRepository;
+import ru.practicum.explore.event.service.EventService;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventRepository eventRepository;
+    private final EventService eventService;
 
 
     @Override
@@ -38,6 +41,16 @@ public class CompilationServiceImpl implements CompilationService {
             compilations = compilationRepository.findAll(PageRequest.of(from / size, size));
         } else {
             compilations = compilationRepository.findByPinned(pinned, PageRequest.of(from / size, size));
+        }
+        for (Compilation compilation : compilations) {
+            if (compilation.getEvents() == null) {
+                compilation.setEvents(new ArrayList<>());
+            } else {
+                List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
+                List<Event> events = eventRepository.findAllById(eventsIds);
+                List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+                compilation.setEvents(eventsWithViewsAndRequests);
+            }
         }
         return compilations.map(compilationMapper::toCompilationDto).getContent();
     }
@@ -49,6 +62,9 @@ public class CompilationServiceImpl implements CompilationService {
             newCompilationDto.setPinned(false);
         }
         Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto));
+        List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
+        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+        compilation.setEvents(eventsWithViewsAndRequests);
         return compilationMapper.toCompilationDto(compilation);
     }
 
@@ -64,7 +80,6 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
-
         Compilation compilation = findCompilationIfExists(compId);
         List<Long> eventsIds = updateCompilationRequest.getEvents();
         if (!eventsIds.isEmpty() || Objects.nonNull(eventsIds)) {
@@ -82,6 +97,9 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setTitle(title);
         }
         Compilation updatedComp = compilationRepository.save(compilation);
+        List<Event> events = eventRepository.findAllById(updateCompilationRequest.getEvents());
+        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+        updatedComp.setEvents(eventsWithViewsAndRequests);
         return compilationMapper.toCompilationDto(updatedComp);
     }
 
@@ -94,7 +112,16 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public CompilationDto getCompilationById(Long compId) {
-        return compilationMapper.toCompilationDto(findCompilationIfExists(compId));
+        Compilation compilation = findCompilationIfExists(compId);
+        if (compilation.getEvents() == null) {
+            compilation.setEvents(new ArrayList<>());
+        } else {
+            List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
+            List<Event> events = eventRepository.findAllById(eventsIds);
+            List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+            compilation.setEvents(eventsWithViewsAndRequests);
+        }
+        return compilationMapper.toCompilationDto(compilation);
     }
 
     private Compilation findCompilationIfExists(Long compId) {

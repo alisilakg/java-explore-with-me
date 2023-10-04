@@ -48,4 +48,8 @@ public interface EventService {
     EventFullDto getPublishedEventById(Long eventId, String ip, String url);
 
     Event findEventByIdForMapping(Long event);
+
+    List<Event> getEventsWithViewsAndCountRequests(List<Event> events);
+
+    Event getEventWithViewsAndCountRequests(Event event);
 }
