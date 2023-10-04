@@ -123,7 +123,7 @@ public class CommentServiceImpl implements CommentService {
 
     private Comment getCommentWithEventWithViewsAndRequests(Long commentId) {
         Comment comment = getCommentIfExists(commentId);
-        Event event = eventService.findEventByIdForMapping(commentId);
+        Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
         comment.setEvent(event);
         return comment;
     }
