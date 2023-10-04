@@ -43,14 +43,15 @@ public class CompilationServiceImpl implements CompilationService {
             compilations = compilationRepository.findByPinned(pinned, PageRequest.of(from / size, size));
         }
         for (Compilation compilation : compilations) {
-            if (compilation.getEvents() == null) {
-                compilation.setEvents(new ArrayList<>());
-            } else {
-                List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
-                List<Event> events = eventRepository.findAllById(eventsIds);
-                List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
-                compilation.setEvents(eventsWithViewsAndRequests);
-            }
+//            if (compilation.getEvents() == null) {
+//                compilation.setEvents(new ArrayList<>());
+//            } else {
+//                List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
+//                List<Event> events = eventRepository.findAllById(eventsIds);
+//                List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+//                compilation.setEvents(eventsWithViewsAndRequests);
+//            }
+            setEvents(compilation);
         }
         return compilations.map(compilationMapper::toCompilationDto).getContent();
     }
@@ -62,9 +63,10 @@ public class CompilationServiceImpl implements CompilationService {
             newCompilationDto.setPinned(false);
         }
         Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto));
-        List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
-        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
-        compilation.setEvents(eventsWithViewsAndRequests);
+//        List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
+//        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+//        compilation.setEvents(eventsWithViewsAndRequests);
+        setEvents(compilation);
         return compilationMapper.toCompilationDto(compilation);
     }
 
@@ -97,9 +99,10 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setTitle(title);
         }
         Compilation updatedComp = compilationRepository.save(compilation);
-        List<Event> events = eventRepository.findAllById(updateCompilationRequest.getEvents());
-        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
-        updatedComp.setEvents(eventsWithViewsAndRequests);
+//        List<Event> events = eventRepository.findAllById(updateCompilationRequest.getEvents());
+//        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+//        updatedComp.setEvents(eventsWithViewsAndRequests);
+        setEvents(updatedComp);
         return compilationMapper.toCompilationDto(updatedComp);
     }
 
@@ -113,6 +116,24 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto getCompilationById(Long compId) {
         Compilation compilation = findCompilationIfExists(compId);
+//        if (compilation.getEvents() == null) {
+//            compilation.setEvents(new ArrayList<>());
+//        } else {
+//            List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
+//            List<Event> events = eventRepository.findAllById(eventsIds);
+//            List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+//            compilation.setEvents(eventsWithViewsAndRequests);
+//        }
+        setEvents(compilation);
+        return compilationMapper.toCompilationDto(compilation);
+    }
+
+    private Compilation findCompilationIfExists(Long compId) {
+        return compilationRepository.findById(compId).orElseThrow(() ->
+                new NotFoundException("Подборка событий с id = " + compId + " не найдена"));
+    }
+
+    private void setEvents(Compilation compilation) {
         if (compilation.getEvents() == null) {
             compilation.setEvents(new ArrayList<>());
         } else {
@@ -121,11 +142,6 @@ public class CompilationServiceImpl implements CompilationService {
             List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
             compilation.setEvents(eventsWithViewsAndRequests);
         }
-        return compilationMapper.toCompilationDto(compilation);
     }
 
-    private Compilation findCompilationIfExists(Long compId) {
-        return compilationRepository.findById(compId).orElseThrow(() ->
-                new NotFoundException("Подборка событий с id = " + compId + " не найдена"));
-    }
 }

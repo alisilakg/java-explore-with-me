@@ -90,32 +90,5 @@ public class EventMapper {
         return result;
     }
 
-//    private long countView(Event event) {
-//        long views = 0L;
-//        if (event.getState() == EventState.PUBLISHED) {
-//            List<ViewStatsDto> viewStatsDto = getEventsViewsList(List.of(event));
-//            views = viewStatsDto.isEmpty() ? 0 : (int) viewStatsDto.get(0).getHits();
-//        }
-//        return views;
-//    }
-
-//    private List<ViewStatsDto> getEventsViewsList(List<Event> events) {
-//        List<String> eventUris = events
-//                .stream()
-//                .map(e -> String.format("/events/%s", e.getId()))
-//                .collect(Collectors.toList());
-//        LocalDateTime start = events.get(0).getCreatedOn();
-//        for (Event event : events) {
-//            if (event.getCreatedOn().isBefore(start)) {
-//                start = event.getCreatedOn();
-//            }
-//        }
-//        LocalDateTime end = LocalDateTime.now();
-//        String app = "ewm-main-service";
-//        Boolean unique = true;
-//
-//        return statClient.getStats(start.format(DATE_FORMATTER), end.format(DATE_FORMATTER), eventUris, unique, app);
-//    }
-
 }
 

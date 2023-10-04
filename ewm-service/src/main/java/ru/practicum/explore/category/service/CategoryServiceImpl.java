@@ -14,6 +14,7 @@ import ru.practicum.explore.category.repository.CategoryRepository;
 import ru.practicum.explore.error.exception.ConflictException;
 import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.event.repository.EventRepository;
+import ru.practicum.explore.event.service.EventService;
 
 import java.util.List;
 

@@ -286,20 +286,25 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<Event> getEventsWithViewsAndCountRequests(List<Event> events) {
         for (Event event : events) {
-            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(event.getId());
-            event.setConfirmedRequests(countConfirmedRequests);
-            Long views = countView(event);
-            event.setViews(views);
+         getEventWithViewsAndCountRequests(event);
         }
         return events;
     }
 
     @Override
     public Event getEventWithViewsAndCountRequests(Event savedEvent) {
-        Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
-        savedEvent.setConfirmedRequests(countConfirmedRequests);
-        Long views = countView(savedEvent);
-        savedEvent.setViews(views);
+        if (savedEvent.getState() == EventState.PUBLISHED) {
+            Long countConfirmedRequests = requestService.countConfirmedRequestsByEventId(savedEvent.getId());
+            savedEvent.setConfirmedRequests(countConfirmedRequests);
+            Long views = countView(savedEvent);
+            savedEvent.setViews(views);
+        } else {
+            Long countConfirmedRequests = 0L;
+            savedEvent.setConfirmedRequests(countConfirmedRequests);
+            Long views = 0L;
+            savedEvent.setViews(views);
+        }
+
         return savedEvent;
     }
 

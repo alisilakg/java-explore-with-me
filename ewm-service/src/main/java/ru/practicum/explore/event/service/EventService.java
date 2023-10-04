@@ -9,6 +9,7 @@ import ru.practicum.explore.request.dto.EventRequestStatusUpdateResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface EventService {
     EventFullDto createEvent(Long userId, NewEventDto newEventDto);
