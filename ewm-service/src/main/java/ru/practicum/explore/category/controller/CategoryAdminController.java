@@ -35,7 +35,6 @@ public class CategoryAdminController {
     }
 
     @PatchMapping("/{catId}")
-    @ResponseStatus(HttpStatus.OK)
     public CategoryDto updateCategory(@Validated(Update.class) @RequestBody CategoryDto categoryDto,
                                       @PathVariable Long catId) {
         log.info("Получен PATCH-запрос к эндпоинту: '/admin/categories' на обновление категории с ID={}", catId);

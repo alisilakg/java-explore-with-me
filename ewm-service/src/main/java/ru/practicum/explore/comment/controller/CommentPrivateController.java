@@ -33,17 +33,15 @@ public class CommentPrivateController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> getAllCommentsByUserId(@PathVariable Long userId,
-                                                   @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                   @RequestParam(required = false, defaultValue = "10") Integer size) {
+                                                   @RequestParam(defaultValue = "0") Integer from,
+                                                   @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/comments' на получение всех комментариев " +
                 "пользователя с ID={}", userId);
         return commentService.getAllCommentsByUserId(userId, from, size);
     }
 
     @GetMapping("/{commentId}")
-    @ResponseStatus(HttpStatus.OK)
     public CommentDto getCommentById(@PathVariable Long userId,
                                      @PathVariable Long commentId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/comments/{commentId}' на получение " +
@@ -52,7 +50,6 @@ public class CommentPrivateController {
     }
 
     @PatchMapping("/{commentId}")
-    @ResponseStatus(HttpStatus.OK)
     public CommentDto updateComment(@Validated(Update.class) @RequestBody UpdateCommentDto updateCommentDto,
                                     @PathVariable Long commentId,
                                     @PathVariable Long userId) {

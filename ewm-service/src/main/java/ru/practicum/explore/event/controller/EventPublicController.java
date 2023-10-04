@@ -3,7 +3,6 @@ package ru.practicum.explore.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.enums.EventSort;
 import ru.practicum.explore.event.dto.EventFullDto;
@@ -22,7 +21,6 @@ public class EventPublicController {
     private final EventService eventService;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getAllPublishedEvents(@RequestParam(required = false) String text,
                                                      @RequestParam(required = false) List<Long> categories,
                                                      @RequestParam(required = false) Boolean paid,
@@ -34,8 +32,8 @@ public class EventPublicController {
                                                          LocalDateTime rangeEnd,
                                                      @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                      @RequestParam(defaultValue = "VIEWS") EventSort sort,
-                                                     @RequestParam(required = false, defaultValue = "0") Integer from,
-                                                     @RequestParam(required = false, defaultValue = "10") Integer size,
+                                                     @RequestParam(defaultValue = "0") Integer from,
+                                                     @RequestParam(defaultValue = "10") Integer size,
                                                      HttpServletRequest request) {
         log.info("Получен GET-запрос к эндпоинту: '/events' на получение краткой информации о событиях.");
         String ip = request.getRemoteAddr();
@@ -55,7 +53,6 @@ public class EventPublicController {
     }
 
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getPublishedEventById(@PathVariable Long id, HttpServletRequest request) {
         log.info("Получен GET-запрос к эндпоинту: '/events/{eventId}' на получение полной информации об опубликованном событии с ID={}", id);
         String ip = request.getRemoteAddr();

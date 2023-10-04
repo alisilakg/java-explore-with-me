@@ -37,7 +37,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getFullEventById(@PathVariable Long userId,
                                          @PathVariable Long eventId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events/{eventId}' на получение полной информации о событии с ID={}", eventId);
@@ -45,7 +44,6 @@ public class EventPrivateController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getShortEventsByUserId(@PathVariable Long userId,
                                                       @RequestParam(defaultValue = "0") Integer from,
                                                       @RequestParam(defaultValue = "10") Integer size) {
@@ -54,7 +52,6 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto updateEvent(@PathVariable Long userId,
                                     @PathVariable Long eventId,
                                     @Validated(Update.class) @RequestBody UpdateEventUserRequest updateEventUserRequest) {
@@ -63,7 +60,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getRequestsForUsersEvent(@PathVariable long userId,
                                                                   @PathVariable long eventId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events/{eventId}/requests' на получение списка всех " +
@@ -72,7 +68,6 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult updateRequests(@PathVariable long userId,
                                                          @PathVariable long eventId,
                                                          @RequestBody EventRequestStatusUpdateRequest

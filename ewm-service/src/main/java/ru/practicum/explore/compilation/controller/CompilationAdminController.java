@@ -35,7 +35,6 @@ public class CompilationAdminController {
     }
 
     @PatchMapping("/{compId}")
-    @ResponseStatus(HttpStatus.OK)
     public CompilationDto updateCompilation(@PathVariable Long compId,
                                             @Validated(Update.class) @RequestBody UpdateCompilationRequest updateCompilationRequest) {
         log.info("Получен PATCH-запрос к эндпоинту: '/admin/compilations/{compId}' на обновление подборки событий с ID={}", compId);
