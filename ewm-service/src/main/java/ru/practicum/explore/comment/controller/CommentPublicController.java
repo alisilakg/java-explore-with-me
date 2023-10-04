@@ -17,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentPublicController {
+    public static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final CommentService commentService;
 
     @GetMapping("/events/{eventId}")
@@ -24,10 +25,10 @@ public class CommentPublicController {
                                            @RequestParam List<Long> users,
                                            @RequestParam(required = false) String text,
                                            @RequestParam(required = false)
-                                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                               @DateTimeFormat(pattern = TIME_FORMAT)
                                                LocalDateTime rangeStart,
                                            @RequestParam(required = false)
-                                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                               @DateTimeFormat(pattern = TIME_FORMAT)
                                                LocalDateTime rangeEnd,
                                            @PositiveOrZero
                                            @RequestParam(defaultValue = "0") Integer from,

@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class EventPublicController {
+    public static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final EventService eventService;
 
     @GetMapping
@@ -27,10 +28,10 @@ public class EventPublicController {
                                                      @RequestParam(required = false) List<Long> categories,
                                                      @RequestParam(required = false) Boolean paid,
                                                      @RequestParam(required = false)
-                                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                         @DateTimeFormat(pattern = TIME_FORMAT)
                                                          LocalDateTime rangeStart,
                                                      @RequestParam(required = false)
-                                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                                         @DateTimeFormat(pattern = TIME_FORMAT)
                                                          LocalDateTime rangeEnd,
                                                      @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                      @RequestParam(defaultValue = "VIEWS") EventSort sort,
