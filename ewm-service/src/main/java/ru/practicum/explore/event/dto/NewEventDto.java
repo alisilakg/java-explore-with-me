@@ -12,13 +12,11 @@ import java.time.LocalDateTime;
 @Setter
 public class NewEventDto {
     @NotBlank(message = "Отсутствует текст в аннотации")
-    @NotEmpty(message = "Отсутствует текст в аннотации")
     @Length(min = 20, max = 2000, message = "Размер аннотации должен быть от 20 до 2000 символов")
     private String annotation;//Краткое описание события
     @NotNull
     private Long category;
     @NotBlank(message = "Отсутствует текст в описании")
-    @NotEmpty(message = "Отсутствует текст в описании")
     @Length(min = 20, max = 7000, message = "Размер описания должен быть от 20 до 7000 символов")
     private String description;
     @NotNull
@@ -33,7 +31,6 @@ public class NewEventDto {
     // Если true, то все заявки будут ожидать подтверждения инициатором события.
     // Если false - то будут подтверждаться автоматически.
     @NotBlank(message = "Отсутствует текст в заголовке")
-    @NotEmpty(message = "Отсутствует текст в заголовке")
     @Length(min = 3, max = 120, message = "Заголовок должен быть от 3 до 120 символов")
     private String title;
 }
