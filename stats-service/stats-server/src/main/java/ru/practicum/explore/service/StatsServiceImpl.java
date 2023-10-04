@@ -32,7 +32,6 @@ public class StatsServiceImpl implements StatsService {
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final StatsRepository statsRepository;
 
-
     @Transactional
     @Override
     public void createHit(EndpointHitDto endpointHitDto) {

@@ -1,7 +1,7 @@
 package ru.practicum.explore.user.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/admin/users")
 @Validated
+@RequiredArgsConstructor
 @Slf4j
 public class UserAdminController {
     private final UserService userService;
-
-    @Autowired
-    public UserAdminController(UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

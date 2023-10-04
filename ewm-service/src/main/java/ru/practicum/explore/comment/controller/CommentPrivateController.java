@@ -1,7 +1,7 @@
 package ru.practicum.explore.comment.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +17,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users/{userId}/comments")
+@RequiredArgsConstructor
 @Slf4j
 @Validated
 public class CommentPrivateController {
     private final CommentService commentService;
-
-    @Autowired
-    public CommentPrivateController(CommentService commentService) {
-        this.commentService = commentService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

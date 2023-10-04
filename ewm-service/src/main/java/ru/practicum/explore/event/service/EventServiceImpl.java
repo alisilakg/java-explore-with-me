@@ -1,7 +1,7 @@
 package ru.practicum.explore.event.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.explore.StatsClient;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
@@ -41,19 +42,6 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statClient;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-
-    @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper,
-                            LocationRepository locationRepository, RequestRepository requestRepository,
-                            StatsClient statClient, UserRepository userRepository, CategoryRepository categoryRepository) {
-        this.eventRepository = eventRepository;
-        this.eventMapper = eventMapper;
-        this.locationRepository = locationRepository;
-        this.requestRepository = requestRepository;
-        this.statClient = statClient;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
-    }
 
     @Override
     @Transactional

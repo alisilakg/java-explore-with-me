@@ -1,7 +1,7 @@
 package ru.practicum.explore.category.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,16 +18,11 @@ import ru.practicum.explore.event.repository.EventRepository;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
-
-    @Autowired
-    public CategoryServiceImpl(CategoryRepository categoryRepository, EventRepository eventRepository) {
-        this.categoryRepository = categoryRepository;
-        this.eventRepository = eventRepository;
-    }
 
     @Override
     @Transactional

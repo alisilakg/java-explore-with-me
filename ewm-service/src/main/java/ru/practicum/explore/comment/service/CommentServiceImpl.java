@@ -1,7 +1,7 @@
 package ru.practicum.explore.comment.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.explore.comment.mapper.CommentMapper;
@@ -20,19 +20,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final UserRepository userRepository;
-
-    @Autowired
-    public CommentServiceImpl(CommentRepository commentRepository, CommentMapper commentMapper,
-                              UserRepository userRepository) {
-        this.commentRepository = commentRepository;
-        this.commentMapper = commentMapper;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public CommentDto createComment(NewCommentDto newCommentDto, Long userId) {

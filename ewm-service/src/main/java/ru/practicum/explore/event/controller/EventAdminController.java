@@ -1,7 +1,7 @@
 package ru.practicum.explore.event.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +17,11 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/admin/events")
 @Validated
+@RequiredArgsConstructor
 @Slf4j
 public class EventAdminController {
     public static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final EventService eventService;
-
-    @Autowired
-    public EventAdminController(EventService eventService) {
-        this.eventService = eventService;
-    }
 
     @GetMapping
     public List<EventFullDto> getAllByCriteriaForAdmin(@RequestParam(required = false) List<Long> users,
