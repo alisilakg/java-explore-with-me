@@ -60,7 +60,7 @@ public class CommentServiceImpl implements CommentService {
                 text,
                 rangeStart,
                 rangeEnd,
-                pageRequest);
+                PageRequest.of(from, size));
 
         return CommentMapper.toCommentDto(getCommentsWithEventWithViewsAndRequests(comments));
     }
