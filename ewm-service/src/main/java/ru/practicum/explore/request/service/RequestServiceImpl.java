@@ -17,6 +17,7 @@ import ru.practicum.explore.request.repository.RequestRepository;
 import ru.practicum.explore.user.model.User;
 import ru.practicum.explore.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,6 @@ public class RequestServiceImpl implements RequestService {
         return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId) {
@@ -82,12 +82,6 @@ public class RequestServiceImpl implements RequestService {
                 .stream()
                 .map(RequestMapper::toRequestDto)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Long countConfirmedRequestsByEventId(Long id) {
-        return requestRepository.getCountByEventIdAndState(id, RequestStatus.CONFIRMED);
     }
 
     private Request completeNewRequest(Long userId, Event event) {
@@ -99,6 +93,7 @@ public class RequestServiceImpl implements RequestService {
                 .requester(user)
                 .status(status)
                 .event(event)
+                .created(LocalDateTime.now())
                 .build();
     }
 

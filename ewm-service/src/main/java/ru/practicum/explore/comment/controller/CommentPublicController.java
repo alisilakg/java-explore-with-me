@@ -3,6 +3,7 @@ package ru.practicum.explore.comment.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.comment.dto.CommentDto;
 import ru.practicum.explore.comment.service.CommentService;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/comments")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class CommentPublicController {
     public static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";

@@ -51,5 +51,4 @@ public interface EventService {
 
     List<Event> getEventsWithViewsAndCountRequests(List<Event> events);
 
-    Event getEventWithViewsAndCountRequests(Event event);
 }

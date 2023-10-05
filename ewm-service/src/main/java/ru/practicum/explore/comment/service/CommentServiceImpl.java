@@ -60,7 +60,7 @@ public class CommentServiceImpl implements CommentService {
                 text,
                 rangeStart,
                 rangeEnd,
-                PageRequest.of(from, size));
+                pageRequest);
 
         return CommentMapper.toCommentDto(getCommentsWithEventWithViewsAndRequests(comments));
     }
@@ -71,9 +71,9 @@ public class CommentServiceImpl implements CommentService {
         userService.findUserByIdForMapping(userId);
         PageRequest pageRequest = CustomPageRequest.of(from, size);
         List<Comment> comments = commentRepository.findByAuthorId(userId, pageRequest);
-        List<Comment> commentsWithEventsWithViewsAndRequests = getCommentsWithEventWithViewsAndRequests(comments);
+        List<Comment> commentsWithEventsDto = getCommentsWithEventWithViewsAndRequests(comments);
 
-        return commentsWithEventsWithViewsAndRequests.stream()
+        return commentsWithEventsDto.stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
@@ -104,16 +104,13 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
-        getCommentIfExists(commentId);
-        userService.findUserByIdForMapping(userId);
-        PageRequest pageRequest = CustomPageRequest.of(0, 10);
-        List<Comment> comments = commentRepository.findByAuthorId(userId, pageRequest);
-        if (comments.stream().anyMatch(comment -> comment.getId().equals(commentId))) {
+        Comment comment = getCommentIfExists(commentId);
+        User user = userService.findUserByIdForMapping(userId);
+        if (comment.getAuthor().getId().equals(user.getId())) {
             commentRepository.deleteById(commentId);
         } else {
             throw new ValidationException("Удалить комментарий может только его автор.");
         }
-
     }
 
     private Comment getCommentIfExists(Long commentId) {
@@ -123,14 +120,18 @@ public class CommentServiceImpl implements CommentService {
 
     private Comment getCommentWithEventWithViewsAndRequests(Long commentId) {
         Comment comment = getCommentIfExists(commentId);
-        Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
-        comment.setEvent(event);
+        Event event = comment.getEvent();
+        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(List.of(event));
+        comment.setEvent(eventsWithViewsAndRequests.get(0));
         return comment;
     }
 
     private List<Comment> getCommentsWithEventWithViewsAndRequests(List<Comment> comments) {
+        List<Event> events = comments.stream().map(Comment::getEvent).collect(Collectors.toList());
+        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
         for (Comment comment : comments) {
-            Event event = eventService.findEventByIdForMapping(comment.getEvent().getId());
+            Long commentId = comment.getEvent().getId();
+            Event event = eventsWithViewsAndRequests.stream().filter(event1 -> commentId.equals(event1.getId())).findFirst().orElse(null);
             comment.setEvent(event);
         }
         return comments;

@@ -13,5 +13,4 @@ public interface RequestService {
 
     List<ParticipationRequestDto> getRequestsByPrivate(Long userId, Long eventId);
 
-    Long countConfirmedRequestsByEventId(Long id);
 }

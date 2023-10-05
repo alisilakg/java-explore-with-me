@@ -2,6 +2,7 @@ package ru.practicum.explore.category.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.category.dto.CategoryDto;
 import ru.practicum.explore.category.service.CategoryService;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/categories")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class CategoryPublicController {
     private final CategoryService categoryService;

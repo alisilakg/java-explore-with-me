@@ -1,29 +1,23 @@
 package ru.practicum.explore.compilation.mapper;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
 import ru.practicum.explore.compilation.dto.CompilationDto;
 import ru.practicum.explore.compilation.dto.NewCompilationDto;
 import ru.practicum.explore.compilation.model.Compilation;
 import ru.practicum.explore.event.mapper.EventMapper;
-import ru.practicum.explore.event.repository.EventRepository;
+import ru.practicum.explore.event.model.Event;
+
+import java.util.List;
 
 
-@Component
+@UtilityClass
 public class CompilationMapper {
-    private final EventRepository eventRepository;
 
-    @Autowired
-    public CompilationMapper(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
-    }
-
-
-    public Compilation toCompilation(NewCompilationDto newCompilationDto) {
+    public Compilation toCompilation(NewCompilationDto newCompilationDto, List<Event> events) {
         return Compilation.builder()
                 .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
-                .events(eventRepository.findAllById(newCompilationDto.getEvents()))
+                .events(events)
                 .build();
     }
 

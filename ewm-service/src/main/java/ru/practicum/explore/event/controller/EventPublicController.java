@@ -3,6 +3,7 @@ package ru.practicum.explore.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.enums.EventSort;
 import ru.practicum.explore.event.dto.EventFullDto;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/events")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class EventPublicController {
     public static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
