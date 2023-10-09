@@ -1,7 +1,7 @@
 package ru.practicum.explore.event.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +14,10 @@ import ru.practicum.explore.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.explore.request.dto.ParticipationRequestDto;
 import ru.practicum.explore.request.service.RequestService;
+
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
+
 import static ru.practicum.explore.validation.ValidationGroups.Create;
 import static ru.practicum.explore.validation.ValidationGroups.Update;
 
@@ -21,17 +25,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users/{userId}/events")
+@RequiredArgsConstructor
 @Slf4j
 @Validated
 public class EventPrivateController {
     private final EventService eventService;
     private final RequestService requestService;
-
-    @Autowired
-    public EventPrivateController(EventService eventService, RequestService requestService) {
-        this.eventService = eventService;
-        this.requestService = requestService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -42,7 +41,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getFullEventById(@PathVariable Long userId,
                                          @PathVariable Long eventId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events/{eventId}' на получение полной информации о событии с ID={}", eventId);
@@ -50,16 +48,16 @@ public class EventPrivateController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getShortEventsByUserId(@PathVariable Long userId,
+                                                      @PositiveOrZero
                                                       @RequestParam(defaultValue = "0") Integer from,
+                                                      @Positive
                                                       @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events' на получение списка всех событий пользователя с ID={}", userId);
         return eventService.getShortEventsByUserId(userId, from, size);
     }
 
     @PatchMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto updateEvent(@PathVariable Long userId,
                                     @PathVariable Long eventId,
                                     @Validated(Update.class) @RequestBody UpdateEventUserRequest updateEventUserRequest) {
@@ -68,7 +66,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getRequestsForUsersEvent(@PathVariable long userId,
                                                                   @PathVariable long eventId) {
         log.info("Получен GET-запрос к эндпоинту: '/users/{userId}/events/{eventId}/requests' на получение списка всех " +
@@ -77,10 +74,9 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult updateRequests(@PathVariable long userId,
                                                          @PathVariable long eventId,
-                                                         @RequestBody EventRequestStatusUpdateRequest
+                                                         @Validated(Update.class) @RequestBody EventRequestStatusUpdateRequest
                                                                  eventRequestStatusUpdateRequest) {
         log.info("Получен PATCH-запрос к эндпоинту: '/users/{userId}/events/{eventId}/requests' на изменение статуса " +
                 "заявки на участие в событии с ID={} пользователя с ID={}", eventId, userId);

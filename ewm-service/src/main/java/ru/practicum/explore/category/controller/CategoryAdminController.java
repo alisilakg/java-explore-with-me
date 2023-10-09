@@ -1,7 +1,7 @@
 package ru.practicum.explore.category.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +15,10 @@ import static ru.practicum.explore.validation.ValidationGroups.Update;
 @RestController
 @RequestMapping(path = "/admin/categories")
 @Validated
+@RequiredArgsConstructor
 @Slf4j
 public class CategoryAdminController {
     private final CategoryService categoryService;
-
-    @Autowired
-    public CategoryAdminController(CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -39,7 +35,6 @@ public class CategoryAdminController {
     }
 
     @PatchMapping("/{catId}")
-    @ResponseStatus(HttpStatus.OK)
     public CategoryDto updateCategory(@Validated(Update.class) @RequestBody CategoryDto categoryDto,
                                       @PathVariable Long catId) {
         log.info("Получен PATCH-запрос к эндпоинту: '/admin/categories' на обновление категории с ID={}", catId);

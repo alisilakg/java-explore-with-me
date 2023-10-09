@@ -3,6 +3,7 @@ package ru.practicum.explore.event.service;
 import ru.practicum.explore.enums.EventSort;
 import ru.practicum.explore.enums.EventState;
 import ru.practicum.explore.event.dto.*;
+import ru.practicum.explore.event.model.Event;
 import ru.practicum.explore.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.request.dto.EventRequestStatusUpdateResult;
 
@@ -45,4 +46,9 @@ public interface EventService {
     EventFullDto patchEventByAdmin(long eventId, UpdateEventAdminRequest updateEventDto);
 
     EventFullDto getPublishedEventById(Long eventId, String ip, String url);
+
+    Event findEventByIdForMapping(Long event);
+
+    List<Event> getEventsWithViewsAndCountRequests(List<Event> events);
+
 }

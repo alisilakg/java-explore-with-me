@@ -1,10 +1,11 @@
 package ru.practicum.explore.compilation.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.compilation.dto.CompilationDto;
 import ru.practicum.explore.compilation.dto.NewCompilationDto;
 import ru.practicum.explore.compilation.dto.UpdateCompilationRequest;
@@ -15,36 +16,36 @@ import ru.practicum.explore.error.exception.ConflictException;
 import ru.practicum.explore.error.exception.NotFoundException;
 import ru.practicum.explore.event.model.Event;
 import ru.practicum.explore.event.repository.EventRepository;
+import ru.practicum.explore.event.service.EventService;
+import ru.practicum.explore.pagination.CustomPageRequest;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
-    private final CompilationMapper compilationMapper;
     private final EventRepository eventRepository;
+    private final EventService eventService;
 
-    @Autowired
-    public CompilationServiceImpl(CompilationRepository compilationRepository, CompilationMapper compilationMapper, EventRepository eventRepository) {
-        this.compilationRepository = compilationRepository;
-        this.compilationMapper = compilationMapper;
-        this.eventRepository = eventRepository;
-    }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CompilationDto> getAllCompilations(Boolean pinned, Integer from, Integer size) {
+        PageRequest pageRequest = CustomPageRequest.of(from, size);
         Page<Compilation> compilations;
         if (pinned == null) {
-            compilations = compilationRepository.findAll(PageRequest.of(from / size, size));
+            compilations = compilationRepository.findAll(pageRequest);
         } else {
-            compilations = compilationRepository.findByPinned(pinned, PageRequest.of(from / size, size));
+            compilations = compilationRepository.findByPinned(pinned, pageRequest);
         }
-        return compilations.map(compilationMapper::toCompilationDto).getContent();
+        setCompilationsWithEventWithViewsAndRequests(compilations.getContent());
+        return compilations.map(CompilationMapper::toCompilationDto).getContent();
     }
 
     @Override
@@ -53,8 +54,11 @@ public class CompilationServiceImpl implements CompilationService {
         if (newCompilationDto.getPinned() == null) {
             newCompilationDto.setPinned(false);
         }
-        Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto));
-        return compilationMapper.toCompilationDto(compilation);
+        List<Long> eventsIds = newCompilationDto.getEvents();
+        List<Event> events = eventRepository.findAllById(eventsIds);
+        Compilation compilation = compilationRepository.save(CompilationMapper.toCompilation(newCompilationDto, events));
+        setEvents(compilation);
+        return CompilationMapper.toCompilationDto(compilation);
     }
 
     @Override
@@ -69,7 +73,6 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationRequest) {
-
         Compilation compilation = findCompilationIfExists(compId);
         List<Long> eventsIds = updateCompilationRequest.getEvents();
         if (!eventsIds.isEmpty() || Objects.nonNull(eventsIds)) {
@@ -87,7 +90,32 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setTitle(title);
         }
         Compilation updatedComp = compilationRepository.save(compilation);
-        return compilationMapper.toCompilationDto(updatedComp);
+        setEvents(updatedComp);
+        return CompilationMapper.toCompilationDto(updatedComp);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompilationDto getCompilationById(Long compId) {
+        Compilation compilation = findCompilationIfExists(compId);
+        setEvents(compilation);
+        return CompilationMapper.toCompilationDto(compilation);
+    }
+
+    private Compilation findCompilationIfExists(Long compId) {
+        return compilationRepository.findById(compId).orElseThrow(() ->
+                new NotFoundException("Подборка событий с id = " + compId + " не найдена"));
+    }
+
+    private void setEvents(Compilation compilation) {
+        if (compilation.getEvents() == null) {
+            compilation.setEvents(new ArrayList<>());
+        } else {
+            List<Long> eventsIds = compilation.getEvents().stream().map(Event::getId).collect(Collectors.toList());
+            List<Event> events = eventRepository.findAllById(eventsIds);
+            List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+            compilation.setEvents(eventsWithViewsAndRequests);
+        }
     }
 
     private List<Event> getEvents(List<Long> eventIds) {
@@ -97,13 +125,19 @@ public class CompilationServiceImpl implements CompilationService {
         return new ArrayList<>(eventRepository.findAllById(eventIds));
     }
 
-    @Override
-    public CompilationDto getCompilationById(Long compId) {
-        return compilationMapper.toCompilationDto(findCompilationIfExists(compId));
+    private void setCompilationsWithEventWithViewsAndRequests(List<Compilation> compilations) {
+        List<Event> events = new ArrayList<>();
+        for (Compilation compilation : compilations) {
+            List<Event> eventList = compilation.getEvents();
+            events.addAll(eventList);
+        }
+        List<Event> eventsWithViewsAndRequests = eventService.getEventsWithViewsAndCountRequests(events);
+        for (Compilation compilation : compilations) {
+            Long compilationId = compilation.getId();
+            List<Event> eventsForCompilation = eventsWithViewsAndRequests.stream()
+                    .filter(event1 -> compilationId.equals(event1.getId())).collect(Collectors.toList());
+            compilation.setEvents(eventsForCompilation);
+        }
     }
 
-    private Compilation findCompilationIfExists(Long compId) {
-        return compilationRepository.findById(compId).orElseThrow(() ->
-                new NotFoundException("Подборка событий с id = " + compId + " не найдена"));
-    }
 }

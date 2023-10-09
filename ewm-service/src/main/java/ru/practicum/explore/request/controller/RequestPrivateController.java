@@ -1,7 +1,7 @@
 package ru.practicum.explore.request.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.request.dto.ParticipationRequestDto;
@@ -11,19 +11,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users/{userId}/requests")
+@RequiredArgsConstructor
 @Slf4j
 public class RequestPrivateController {
     private final RequestService requestService;
 
-    @Autowired
-    public RequestPrivateController(RequestService requestService) {
-        this.requestService = requestService;
-    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
-                                       //@NotNull(message = "Отсутствует id события в запросе")
                                                  @RequestParam Long eventId) {
         return requestService.createRequest(userId, eventId);
     }
